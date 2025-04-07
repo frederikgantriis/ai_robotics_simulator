@@ -3,31 +3,33 @@ from numpy import cos, sin, pi
 
 from sensor import SingleRayDistanceAndColorSensor
 
+
 class DifferentialDriveRobot:
     def __init__(self, env, x, y, theta, axel_length=40, wheel_radius=10, max_motor_speed=2*pi, kinematic_timestep=0.01):
         self.env = env
         self.x = x
         self.y = y
         self.theta = theta  # Orientation in radians
-        self.axel_length = axel_length # in cm
-        self.wheel_radius = wheel_radius # in cm
+        self.axel_length = axel_length  # in cm
+        self.wheel_radius = wheel_radius  # in cm
 
         self.kinematic_timestep = kinematic_timestep
 
         self.collided = False
 
-        self.left_motor_speed  = 0 #rad/s
-        self.right_motor_speed = 0 #rad/s
-        #self.theta_noise_level = 0.01
+        self.left_motor_speed = 0  # rad/s
+        self.right_motor_speed = 0  # rad/s
+        # self.theta_noise_level = 0.01
 
         self.sensor = SingleRayDistanceAndColorSensor(100, 0)
 
-    def move(self, robot_timestep): # run the control algorithm here
+    def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
         self._step_kinematics(robot_timestep)
 
         # check for collision
-        self.collided = self.env.check_collision(self.get_robot_pose(), self.get_robot_radius())
+        self.collided = self.env.check_collision(
+            self.get_robot_pose(), self.get_robot_radius())
 
         # update sensors
         self.sense()
@@ -35,10 +37,9 @@ class DifferentialDriveRobot:
         # run the control algorithm and update motor speeds
         # ...
 
-
-
     def _step_kinematics(self, robot_timestep):
-        for _ in range(int(robot_timestep / self.kinematic_timestep)): # the kinematic model is updated in every step for robot_timestep/self.kinematic_timestep times
+        # the kinematic model is updated in every step for robot_timestep/self.kinematic_timestep times
+        for _ in range(int(robot_timestep / self.kinematic_timestep)):
             # odometry is used to calculate where we approximately end up after each step
             pos = self._odometer(self.kinematic_timestep)
             self.x = pos.x
@@ -58,9 +59,12 @@ class DifferentialDriveRobot:
         left_angular_velocity = self.left_motor_speed
         right_angular_velocity = self.right_motor_speed
 
-        v_x = cos(self.theta) * (self.wheel_radius * (left_angular_velocity + right_angular_velocity) / 2)
-        v_y = sin(self.theta) * (self.wheel_radius * (left_angular_velocity + right_angular_velocity) / 2)
-        omega = (self.wheel_radius * (left_angular_velocity - right_angular_velocity)) / self.axel_length
+        v_x = cos(self.theta) * (self.wheel_radius *
+                                 (left_angular_velocity + right_angular_velocity) / 2)
+        v_y = sin(self.theta) * (self.wheel_radius *
+                                 (left_angular_velocity + right_angular_velocity) / 2)
+        omega = (self.wheel_radius * (left_angular_velocity -
+                 right_angular_velocity)) / self.axel_length
 
         next_x = self.x + (v_x * delta_time)
         next_y = self.y + (v_y * delta_time)
@@ -71,7 +75,6 @@ class DifferentialDriveRobot:
 
         return RobotPose(next_x, next_y, next_theta)
 
-
     def get_robot_pose(self):
         return RobotPose(self.x, self.y, self.theta)
 
@@ -79,7 +82,8 @@ class DifferentialDriveRobot:
         return self.axel_length/2
 
     def draw(self, surface):
-        pygame.draw.circle(surface, (0,255,0), center=(self.x, self.y), radius=self.axel_length/2, width = 1)
+        pygame.draw.circle(surface, (0, 255, 0), center=(
+            self.x, self.y), radius=self.axel_length/2, width=1)
 
         # Calculate the left and right wheel positions
         half_axl = self.axel_length/2
@@ -94,13 +98,15 @@ class DifferentialDriveRobot:
         heading_y = self.y + heading_length * sin(self.theta)
 
         # Draw the axle line
-        pygame.draw.line(surface, (0, 255, 0), (left_wheel_x, left_wheel_y), (right_wheel_x, right_wheel_y), 3)
+        pygame.draw.line(surface, (0, 255, 0), (left_wheel_x,
+                         left_wheel_y), (right_wheel_x, right_wheel_y), 3)
 
         # Draw the heading line
-        pygame.draw.line(surface, (255, 0, 0), (self.x, self.y), (heading_x, heading_y), 5)
+        pygame.draw.line(surface, (255, 0, 0), (self.x, self.y),
+                         (heading_x, heading_y), 5)
 
         # Draw sensor beams
-        self.sensor.draw(self.get_robot_pose(),surface)
+        self.sensor.draw(self.get_robot_pose(), surface)
 
 
 class RobotPose:
