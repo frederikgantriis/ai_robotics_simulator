@@ -25,6 +25,7 @@ class Environment:
         # kitchen
         kitchen_wall1 = (LineString([(300, 0), (300, 150)]), (255, 0, 255))
         kitchen_wall2 = (LineString([(0, 500), (300, 500)]), (255, 0, 255))
+        kitchen_wall2_5 = (LineString([(200, 500), (600, 500)]), (255, 0, 255))
         kitchen_wall3 = (LineString([(300, 400), (300, 500)]), (255, 0, 255))
         # room
         room_right_wall2 = (LineString(
@@ -35,10 +36,17 @@ class Environment:
         box_3 = (LineString([(100, 420), (150, 420)]), (255, 255, 0))  # yellow
         box_4 = (LineString([(150, 380), (150, 420)]), (255, 255, 0))  # yellow
 
+        kasse_1 = (LineString([(600, 380), (750, 380)]), (255, 255, 0))  # yellow
+        kasse_2 = (LineString([(600, 380), (700, 420)]), (255, 255, 0))  # yellow
+        kasse_3 = (LineString([(600, 420), (750, 420)]), (255, 255, 0))  # yellow
+        kasse_4 = (LineString([(650, 380), (750, 420)]), (255, 255, 0))  # yellow
+
         self.obstacle_walls = [left_wall, bottom_wall, right_wall, top_wall, kitchen_wall1,
-                               kitchen_wall2, kitchen_wall3,
+                               kitchen_wall2, kitchen_wall2_5, kitchen_wall3,
                                room_right_wall2,
-                               box_1, box_2, box_3, box_4]
+                               box_1, box_2, box_3, box_4,
+                               kasse_1, kasse_2, kasse_3, kasse_4
+                               ]
 
     def get_obstacles(self):
         return self.obstacle_walls

@@ -17,11 +17,13 @@ class DifferentialDriveRobot:
 
         self.collided = False
 
-        self.left_motor_speed = 0  # rad/s
-        self.right_motor_speed = 0  # rad/s
+        self.left_motor_speed = 5/10  # rad/s
+        self.right_motor_speed = 4/10  # rad/s
         # self.theta_noise_level = 0.01
 
         self.sensor = SingleRayDistanceAndColorSensor(100, 0)
+        self.sensor_l = SingleRayDistanceAndColorSensor(100, -0.8)
+        self.sensor_r = SingleRayDistanceAndColorSensor(100, 0.8)
 
     def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
@@ -45,13 +47,16 @@ class DifferentialDriveRobot:
             self.x = pos.x
             self.y = pos.y
             self.theta = pos.theta
-            # Add a small amount of noise to the orientation and/or position
+
+          # Add a small amount of noise to the orientation and/or position
             # noise = random.gauss(0, self.theta_noise_level)
             # self.theta += noise
 
     def sense(self):
         obstacles = self.env.get_obstacles()
         robot_pose = self.get_robot_pose()
+        self.sensor_l.generate_beam_and_measure(robot_pose, obstacles)
+        self.sensor_r.generate_beam_and_measure(robot_pose, obstacles)
         self.sensor.generate_beam_and_measure(robot_pose, obstacles)
 
     # this is in fact what a robot can predict about its own future position
@@ -107,6 +112,8 @@ class DifferentialDriveRobot:
 
         # Draw sensor beams
         self.sensor.draw(self.get_robot_pose(), surface)
+        self.sensor_l.draw(self.get_robot_pose(), surface)
+        self.sensor_r.draw(self.get_robot_pose(), surface)
 
 
 class RobotPose:
