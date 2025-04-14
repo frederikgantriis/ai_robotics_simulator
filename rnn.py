@@ -13,7 +13,7 @@ class SimpleFeedforwardNet(nn.Module):
 
     def forward(self, x):
         # Pass the input through the first fully connected layer and apply ReLU activation
-        x = F.relu(self.fc1(x))
+        x = F.sigmoid(self.fc1(x))
         # Pass the output of the hidden layer through the second fully connected layer
         x = self.fc2(x)
         return x
