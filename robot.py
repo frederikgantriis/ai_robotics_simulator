@@ -1,8 +1,10 @@
 import pygame
-from numpy import average, cos, degrees, radians, sin, pi
+from numpy import average, cos, degrees, radians, sin, pi, size
 
 from sensor import SingleRayDistanceAndColorSensor
 import sensor
+import torch
+import numpy as np
 
 
 class DifferentialDriveRobot:
@@ -11,6 +13,7 @@ class DifferentialDriveRobot:
                  x,
                  y,
                  theta,
+                 neural_network,
                  axel_length=40,
                  wheel_radius=10,
                  max_motor_speed=2*pi,
@@ -31,6 +34,8 @@ class DifferentialDriveRobot:
         self.right_motor_speed = 1  # rad/s
         # self.theta_noise_level = 0.01
 
+        self.neural_network = neural_network
+
         self.r1 = SingleRayDistanceAndColorSensor(100, radians(30))
         self.r2 = SingleRayDistanceAndColorSensor(100, radians(60))
 
@@ -41,6 +46,8 @@ class DifferentialDriveRobot:
         self.b = SingleRayDistanceAndColorSensor(100, radians(180))
         self.sensors = [self.r1, self.r2, self.l1, self.l2, self.f, self.b]
 
+    def get_nn(self):
+        return self.neural_network
 
     def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
@@ -53,8 +60,14 @@ class DifferentialDriveRobot:
         # update sensors
         self.sense()
 
+        parameters = [sensor.latest_reading[0] for sensor in self.sensors]
 
-        # ...
+        tensor_parameters = torch.tensor(
+            np.array(parameters)).float().unsqueeze(0)
+
+        output_layer = self.neural_network(tensor_parameters)
+
+        print(output_layer)
 
     def _step_kinematics(self, robot_timestep):
         # the kinematic model is updated in every step for robot_timestep/self.kinematic_timestep times
@@ -72,7 +85,8 @@ class DifferentialDriveRobot:
     def sense(self):
         obstacles = self.env.get_obstacles()
         robot_pose = self.get_robot_pose()
-        [sensor.generate_beam_and_measure(robot_pose, obstacles) for sensor in self.sensors]
+        [sensor.generate_beam_and_measure(
+            robot_pose, obstacles) for sensor in self.sensors]
 
     # this is in fact what a robot can predict about its own future position
     def _odometer(self, delta_time):
@@ -126,7 +140,8 @@ class DifferentialDriveRobot:
                          (heading_x, heading_y), 5)
 
         # Draw sensor beams
-        [sensor.draw(self.get_robot_pose(), surface) for sensor in self.sensors]
+        [sensor.draw(self.get_robot_pose(), surface)
+         for sensor in self.sensors]
 
 
 class RobotPose:

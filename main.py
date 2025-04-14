@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import QUIT, KEYDOWN
 from environment import Environment
 from robot import DifferentialDriveRobot
+from rnn import SimpleFeedforwardNet
 
 # for potential visualization
 USE_VISUALIZATION = True
@@ -19,7 +20,10 @@ env = Environment(width, height)
 # (simulated) time taken for one cycle of the robot executing its algorithm
 robot_timestep = 0.1  # in seconds (simulated time)
 
-robot = DifferentialDriveRobot(env, width/2-100, height/2-100, 0)
+rnn = SimpleFeedforwardNet(6, 4, 2)
+
+
+robot = DifferentialDriveRobot(env, width/2-100, height/2-100, 0, rnn)
 
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Robot Kinematic Simulator")
