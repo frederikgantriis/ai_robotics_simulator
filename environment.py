@@ -41,11 +41,11 @@ class Environment:
         kasse_3 = (LineString([(600, 420), (750, 420)]), (255, 255, 0))  # yellow
         kasse_4 = (LineString([(650, 380), (750, 420)]), (255, 255, 0))  # yellow
 
-        self.obstacle_walls = [left_wall, bottom_wall, right_wall, top_wall, kitchen_wall1,
-                               kitchen_wall2, kitchen_wall2_5, kitchen_wall3,
-                               room_right_wall2,
-                               box_1, box_2, box_3, box_4,
-                               kasse_1, kasse_2, kasse_3, kasse_4
+        self.obstacle_walls = [left_wall, bottom_wall, right_wall, top_wall, 
+                               #kitchen_wall1, kitchen_wall2, kitchen_wall2_5, kitchen_wall3,
+                               #room_right_wall2,
+                               #box_1, box_2, box_3, box_4,
+                               #kasse_1, kasse_2, kasse_3, kasse_4
                                ]
 
     def get_obstacles(self):

@@ -31,8 +31,8 @@ class DifferentialDriveRobot:
         self.right_motor_speed = 4  # rad/s
         # self.theta_noise_level = 0.01
 
-        self.lidar = [SingleRayDistanceAndColorSensor(
-            800, radians(x)) for x in range(0, 360)]
+        self.sensor = SingleRayDistanceAndColorSensor(100, 0)
+
 
     def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
@@ -44,36 +44,6 @@ class DifferentialDriveRobot:
 
         # update sensors
         self.sense()
-
-
-        # run the control algorithm and update motor speeds
-        right = sum([x.latest_reading[0] for x in self.lidar[1:180]])
-        left = sum([x.latest_reading[0] for x in self.lidar[180:]])
-        total = right + left
-
-        print(right/total, left/total)
-
-        speed = 5
-        turn = speed / 9
-        thresh = 0.3
-
-        if right/total < thresh:
-            self.left_motor_speed -= turn
-            self.right_motor_speed += turn / 2
-
-        elif left/total < thresh:
-            self.left_motor_speed += turn
-            self.right_motor_speed -= turn / 2
-
-        elif self.lidar[0].latest_reading[0] < 70:
-            t = -1 if left < right else 1
-            print("CRASH IMMINENT")
-            self.left_motor_speed -= t * turn
-            self.right_motor_speed += t * turn / 2
-
-        else:
-            self.left_motor_speed = speed
-            self.right_motor_speed = speed
 
 
         # ...
@@ -94,8 +64,7 @@ class DifferentialDriveRobot:
     def sense(self):
         obstacles = self.env.get_obstacles()
         robot_pose = self.get_robot_pose()
-        for sensor in self.lidar:
-            sensor.generate_beam_and_measure(robot_pose, obstacles)
+        self.sensor.generate_beam_and_measure(robot_pose, obstacles)
 
     # this is in fact what a robot can predict about its own future position
     def _odometer(self, delta_time):
@@ -149,9 +118,7 @@ class DifferentialDriveRobot:
                          (heading_x, heading_y), 5)
 
         # Draw sensor beams
-        for i, lidar_s in enumerate(self.lidar):
-            if i % 16 == 0:
-                lidar_s.draw(self.get_robot_pose(), surface)
+        self.sensor.draw(self.get_robot_pose(), surface)
 
 
 class RobotPose:
