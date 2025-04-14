@@ -67,7 +67,11 @@ class DifferentialDriveRobot:
 
         output_layer = self.neural_network(tensor_parameters)
 
-        print(output_layer)
+        output_values = output_layer.detach().numpy()[0]
+
+        print(output_values)
+
+        self.right_motor_speed, self.left_motor_speed = output_values
 
     def _step_kinematics(self, robot_timestep):
         # the kinematic model is updated in every step for robot_timestep/self.kinematic_timestep times
