@@ -74,7 +74,7 @@ class DifferentialDriveRobot:
 
         parameters = [sensor.latest_reading[0] for sensor in self.sensors]
 
-        self.score += self.beam_length - \
+        self.score += 0 if min(parameters) == 100 else self.beam_length - \
             min(parameters) if 5 < min(parameters) < 100 else -.002
 
         tensor_parameters = torch.tensor(

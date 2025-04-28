@@ -82,17 +82,17 @@ def main():
 
         sim_time = ((pygame.time.get_ticks() - start_time) / 1000) * sim_ratio
 
-        print(sim_time)
-
         if sim_time >= 20:
 
-            bestidx = np.argmax([robot.get_score() for robot in ROBOTS])
-            best = ROBOTS[bestidx].get_nn()
+            fitsrt = sorted(ROBOTS, key = lambda r: r.get_score())
+            best = fitsrt[0].get_nn()
 
-            shuffle(ROBOTS)
-
-            ROBOTS = [spawn(best)] + [spawn(best.clone_and_mutate())
-                                      for _ in range(5)] + [spawn(ROBOTS[i].get_nn()) for i in range(4)]
+            if all([robot.get_score() == 0 for robot in ROBOTS]):
+                print("Spawning new generation")
+                ROBOTS = [spawn() for _ in range(10)]
+            else:
+                ROBOTS = [spawn(best)] + [spawn(best.clone_and_mutate()) for _ in range(5)] + [spawn(ROBOTS[i].get_nn().clone_and_mutate()) for i in range(1, 4)]
+            print(len(ROBOTS))
 
             # reset screen and time
             screen.fill((0, 0, 0))
