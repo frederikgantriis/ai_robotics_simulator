@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import copy
 
 
 class SimpleFeedforwardNet(nn.Module):
@@ -17,3 +18,17 @@ class SimpleFeedforwardNet(nn.Module):
         # Pass the output of the hidden layer through the second fully connected layer
         x = self.fc2(x)
         return x
+
+    def mutate(self, mutation_rate=0.01):
+        """Mutate the model's weights with random noise."""
+        with torch.no_grad():
+            for param in self.parameters():
+                noise = (torch.rand_like(param) * 2 - 1)  # Uniform noise in [-1, 1]
+                param.add_(noise * mutation_rate)
+
+    def clone_and_mutate(self, mutation_rate=0.01):
+        """Create a child model by cloning and mutating."""
+        # Deep copy to clone the model and its parameters
+        child = copy.deepcopy(self)
+        child.mutate(mutation_rate)
+        return child

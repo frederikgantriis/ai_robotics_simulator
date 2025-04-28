@@ -30,24 +30,30 @@ class DifferentialDriveRobot:
 
         self.collided = False
 
+        self.score = 0
         self.left_motor_speed = 2  # rad/s
         self.right_motor_speed = 1  # rad/s
         # self.theta_noise_level = 0.01
 
         self.neural_network = neural_network
 
-        self.r1 = SingleRayDistanceAndColorSensor(100, radians(30))
-        self.r2 = SingleRayDistanceAndColorSensor(100, radians(60))
+        self.beam_length = 100
+        self.r1 = SingleRayDistanceAndColorSensor(self.beam_length, radians(30))
+        self.r2 = SingleRayDistanceAndColorSensor(self.beam_length, radians(60))
 
-        self.l1 = SingleRayDistanceAndColorSensor(100, radians(-30))
-        self.l2 = SingleRayDistanceAndColorSensor(100, radians(-60))
+        self.l1 = SingleRayDistanceAndColorSensor(self.beam_length, radians(-30))
+        self.l2 = SingleRayDistanceAndColorSensor(self.beam_length, radians(-60))
 
-        self.f = SingleRayDistanceAndColorSensor(100, 0)
-        self.b = SingleRayDistanceAndColorSensor(100, radians(180))
+        self.f = SingleRayDistanceAndColorSensor(self.beam_length, 0)
+        self.b = SingleRayDistanceAndColorSensor(self.beam_length, radians(180))
         self.sensors = [self.r1, self.r2, self.l1, self.l2, self.f, self.b]
 
     def get_nn(self):
         return self.neural_network
+
+    def get_score(self):
+        return self.score
+
 
     def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
@@ -62,6 +68,9 @@ class DifferentialDriveRobot:
 
         parameters = [sensor.latest_reading[0] for sensor in self.sensors]
 
+        self.score +=  self.beam_length - min(parameters) if 5 < min(parameters) < 100 else -.002
+
+
         tensor_parameters = torch.tensor(
             np.array(parameters)).float().unsqueeze(0)
 
@@ -69,7 +78,7 @@ class DifferentialDriveRobot:
 
         output_values = output_layer.detach().numpy()[0]
 
-        print(output_values)
+ #       print(output_values)
 
         self.right_motor_speed, self.left_motor_speed = output_values
 
