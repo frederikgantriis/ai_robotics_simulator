@@ -14,6 +14,7 @@ class DifferentialDriveRobot:
                  y,
                  theta,
                  neural_network,
+                 sim_ratio,
                  axel_length=40,
                  wheel_radius=10,
                  max_motor_speed=2*pi,
@@ -27,6 +28,7 @@ class DifferentialDriveRobot:
         self.wheel_radius = wheel_radius  # in cm
 
         self.kinematic_timestep = kinematic_timestep
+        self.sim_ratio = sim_ratio
 
         self.collided = False
 
@@ -38,14 +40,19 @@ class DifferentialDriveRobot:
         self.neural_network = neural_network
 
         self.beam_length = 100
-        self.r1 = SingleRayDistanceAndColorSensor(self.beam_length, radians(30))
-        self.r2 = SingleRayDistanceAndColorSensor(self.beam_length, radians(60))
+        self.r1 = SingleRayDistanceAndColorSensor(
+            self.beam_length, radians(30))
+        self.r2 = SingleRayDistanceAndColorSensor(
+            self.beam_length, radians(60))
 
-        self.l1 = SingleRayDistanceAndColorSensor(self.beam_length, radians(-30))
-        self.l2 = SingleRayDistanceAndColorSensor(self.beam_length, radians(-60))
+        self.l1 = SingleRayDistanceAndColorSensor(
+            self.beam_length, radians(-30))
+        self.l2 = SingleRayDistanceAndColorSensor(
+            self.beam_length, radians(-60))
 
         self.f = SingleRayDistanceAndColorSensor(self.beam_length, 0)
-        self.b = SingleRayDistanceAndColorSensor(self.beam_length, radians(180))
+        self.b = SingleRayDistanceAndColorSensor(
+            self.beam_length, radians(180))
         self.sensors = [self.r1, self.r2, self.l1, self.l2, self.f, self.b]
 
     def get_nn(self):
@@ -54,10 +61,9 @@ class DifferentialDriveRobot:
     def get_score(self):
         return self.score
 
-
     def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
-        self._step_kinematics(robot_timestep)
+        self._step_kinematics(robot_timestep * self.sim_ratio)
 
         # check for collision
         self.collided = self.env.check_collision(
@@ -68,8 +74,8 @@ class DifferentialDriveRobot:
 
         parameters = [sensor.latest_reading[0] for sensor in self.sensors]
 
-        self.score +=  self.beam_length - min(parameters) if 5 < min(parameters) < 100 else -.002
-
+        self.score += self.beam_length - \
+            min(parameters) if 5 < min(parameters) < 100 else -.002
 
         tensor_parameters = torch.tensor(
             np.array(parameters)).float().unsqueeze(0)
@@ -77,8 +83,6 @@ class DifferentialDriveRobot:
         output_layer = self.neural_network(tensor_parameters)
 
         output_values = output_layer.detach().numpy()[0]
-
- #       print(output_values)
 
         self.right_motor_speed, self.left_motor_speed = output_values
 

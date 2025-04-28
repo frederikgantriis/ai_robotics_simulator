@@ -21,15 +21,20 @@ pygame.init()
 width, height = 1200, 800  # cm
 env = Environment(width, height)
 
+# Simulation time ratio
+sim_ratio = 20
+
 # (simulated) time taken for one cycle of the robot executing its algorithm
 robot_timestep = 0.1  # in seconds (simulated time)
 
-def spawn(rnn = None):
-    
+
+def spawn(rnn=None):
+
     if rnn is None:
         rnn = SimpleFeedforwardNet(6, 4, 2)
 
-    return DifferentialDriveRobot(env, width/2-100, height/2-100, 0, rnn)
+    return DifferentialDriveRobot(env, width/2-100, height/2-100, 0, rnn, sim_ratio)
+
 
 ROBOTS = [spawn() for _ in range(10)]
 
@@ -75,8 +80,7 @@ def main():
             pygame.display.flip()
             pygame.display.update()
 
-
-        sim_time = (pygame.time.get_ticks() - start_time) / 1000
+        sim_time = ((pygame.time.get_ticks() - start_time) / 1000) * sim_ratio
 
         print(sim_time)
 
@@ -87,12 +91,12 @@ def main():
 
             shuffle(ROBOTS)
 
-            ROBOTS = [spawn(best)] + [spawn(best.clone_and_mutate()) for _ in range(5)] + [spawn(ROBOTS[i].get_nn()) for i in range(4)]
+            ROBOTS = [spawn(best)] + [spawn(best.clone_and_mutate())
+                                      for _ in range(5)] + [spawn(ROBOTS[i].get_nn()) for i in range(4)]
 
             # reset screen and time
             screen.fill((0, 0, 0))
             start_time = pygame.time.get_ticks()
-
 
     print("total execution time:", (pygame.time.get_ticks() -
           start_time) / 1000, "seconds")  # runtime in seconds
@@ -107,7 +111,6 @@ def drawBoom():
     text_surface = font.render('BOOM', True, (255, 0, 0))
     text_rect = text_surface.get_rect(center=(width/2, height/2))
     screen.blit(text_surface, text_rect)
-
 
 
 if __name__ == "__main__":
