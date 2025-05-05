@@ -25,7 +25,7 @@ for filename in os.listdir(data_folder):
         # Plot
         plt.figure(figsize=(14, 6))
         sns.boxplot(x='Generation', y='Score', data=df_long, palette='Set3')
-        plt.title(f'Score Distribution - {filename}')
+        plt.title(f'Score Distribution - {filename[:-4]}')
         plt.xlabel('Generation')
         plt.ylabel('Score')
         plt.grid(True)
