@@ -19,7 +19,7 @@ class SimpleFeedforwardNet(nn.Module):
         x = self.fc2(x)
         return x
 
-    def mutate(self, mutation_rate=0.01):
+    def mutate(self, mutation_rate=0.05):
         """Mutate the model's weights with random noise."""
         with torch.no_grad():
             for param in self.parameters():

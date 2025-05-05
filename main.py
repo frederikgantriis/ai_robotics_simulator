@@ -1,15 +1,15 @@
 import pygame
 from pygame.locals import QUIT, KEYDOWN
-from shapely.lib import simplify_preserve_topology
 from environment import Environment
 from robot import DifferentialDriveRobot
 from rnn import SimpleFeedforwardNet
-from time import time
-import numpy as np
-from random import shuffle
+from time import strftime
+from torch import save, load
+
+FILE = './data/' + strftime('%m%d_%H:%M:%S')
 
 # for potential visualization
-USE_VISUALIZATION = True
+USE_VISUALIZATION = False
 
 # to pause the execution
 PAUSE = False
@@ -18,15 +18,17 @@ PAUSE = False
 pygame.init()
 
 # Set up environment
-width, height = 1200, 800  # cm
+width, height = 800, 800  # cm
 env = Environment(width, height)
 
 # Simulation time ratio
-sim_ratio = 20
+sim_ratio = 50
 
 # (simulated) time taken for one cycle of the robot executing its algorithm
 robot_timestep = 0.1  # in seconds (simulated time)
 
+COUNT = 30
+GENERATIONS = 50
 
 def spawn(rnn=None):
 
@@ -36,7 +38,7 @@ def spawn(rnn=None):
     return DifferentialDriveRobot(env, width/2-100, height/2-100, 0, rnn, sim_ratio)
 
 
-ROBOTS = [spawn() for _ in range(10)]
+ROBOTS = [spawn() for _ in range(COUNT)]
 
 
 screen = pygame.display.set_mode((width, height))
@@ -48,7 +50,9 @@ def main():
     start_time = pygame.time.get_ticks()
     # Game loop
     running = True
-    while running:
+    # We only train x generations before stopping experiment
+    generations = 100
+    while running and generations:
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
@@ -82,25 +86,34 @@ def main():
 
         sim_time = ((pygame.time.get_ticks() - start_time) / 1000) * sim_ratio
 
-        if sim_time >= 20:
+        if sim_time >= 240:
 
-            fitsrt = sorted(ROBOTS, key = lambda r: r.get_score())
+            fitsrt = sorted(ROBOTS, key = lambda r: r.get_score(), reverse=True)
             best = fitsrt[0].get_nn()
 
-            if all([robot.get_score() == 0 for robot in ROBOTS]):
-                print("Spawning new generation")
-                ROBOTS = [spawn() for _ in range(10)]
+            with open(FILE+'.csv', '+a') as f:
+                f.write(', '.join(map(lambda r: str(r.get_score()), fitsrt)) + '\n')
+
+            if all([robot.get_score() <= 0 for robot in ROBOTS]):
+                print("Spawning random generation")
+                ROBOTS = [spawn() for _ in range(COUNT)]
             else:
-                ROBOTS = [spawn(best)] + [spawn(best.clone_and_mutate()) for _ in range(5)] + [spawn(ROBOTS[i].get_nn().clone_and_mutate()) for i in range(1, 4)]
-            print(len(ROBOTS))
+                print("Seeding new generation", max(ROBOTS, key = lambda r: r.get_score()).get_score())
+                ROBOTS = [spawn(best)] + \
+                        [spawn(best.clone_and_mutate()) for _ in range(int(COUNT * 0.7)-1)] + \
+                        [spawn(ROBOTS[i].get_nn().clone_and_mutate()) for i in range(1, int(COUNT * 0.3)+1)]
 
             # reset screen and time
             screen.fill((0, 0, 0))
             start_time = pygame.time.get_ticks()
+            # decrease generation count
+            generations -= 1
 
     print("total execution time:", (pygame.time.get_ticks() -
           start_time) / 1000, "seconds")  # runtime in seconds
 
+    fitsrt = sorted(ROBOTS, key = lambda r: r.get_score(), reverse=True)
+    save(fitsrt[0].get_nn(), FILE+'.pkl')
     # Quit Pygame
     pygame.quit()
 

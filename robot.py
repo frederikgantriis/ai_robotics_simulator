@@ -1,15 +1,15 @@
 import pygame
-from numpy import average, cos, degrees, radians, sin, pi, size
+from numpy import cos, radians, sin, pi
 
+from environment import Environment
 from sensor import SingleRayDistanceAndColorSensor
-import sensor
 import torch
 import numpy as np
 
 
 class DifferentialDriveRobot:
     def __init__(self,
-                 env,
+                 env: Environment,
                  x,
                  y,
                  theta,
@@ -18,7 +18,8 @@ class DifferentialDriveRobot:
                  axel_length=40,
                  wheel_radius=10,
                  max_motor_speed=2*pi,
-                 kinematic_timestep=0.01
+                 kinematic_timestep=0.01,
+                 learning_rate = 0.02,
                  ):
         self.env = env
         self.x = x
@@ -29,8 +30,10 @@ class DifferentialDriveRobot:
 
         self.kinematic_timestep = kinematic_timestep
         self.sim_ratio = sim_ratio
+        self.learning_rate = learning_rate
 
         self.collided = False
+        self.dead = False
 
         self.score = 0
         self.left_motor_speed = 2  # rad/s
@@ -61,6 +64,10 @@ class DifferentialDriveRobot:
     def get_score(self):
         return self.score
 
+    def calc_score(self, readings) -> float:
+        # reading decreases as robot approaches wall, stop calculating score after dying
+        return max([self.beam_length - reading for reading in readings]) * (not self.dead)
+
     def move(self, robot_timestep):  # run the control algorithm here
         # simulate kinematics during one execution cycle of the robot
         self._step_kinematics(robot_timestep * self.sim_ratio)
@@ -69,13 +76,14 @@ class DifferentialDriveRobot:
         self.collided = self.env.check_collision(
             self.get_robot_pose(), self.get_robot_radius())
 
+        self.dead = self.collided or self.dead
+
         # update sensors
         self.sense()
 
         parameters = [sensor.latest_reading[0] for sensor in self.sensors]
 
-        self.score += 0 if min(parameters) == 100 else self.beam_length - \
-            min(parameters) if 5 < min(parameters) < 100 else -.002
+        self.score += self.calc_score(parameters)
 
         tensor_parameters = torch.tensor(
             np.array(parameters)).float().unsqueeze(0)
